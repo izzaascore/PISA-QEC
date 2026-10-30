@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -25,13 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def root():
-    return {
-        "status": "online",
-        "message": "EduMaster (PISA-QEC) API muvaffaqiyatli ishlamoqda!",
-        "docs": "https://pisa-qec.onrender.com/docs"
-    }
+    return RedirectResponse(url="/docs")
+
 
 
 def init_db(db: Session):
