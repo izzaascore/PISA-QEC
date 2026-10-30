@@ -12,7 +12,10 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setError('');
 
-    fetch(`http://localhost:8000/api/auth/login`, {
+    const isLocalDev = window.location.hostname === 'localhost' && window.location.port !== '8000' && window.location.port !== '';
+    const authUrl = isLocalDev ? 'http://localhost:8000/api/auth/login' : '/api/auth/login';
+
+    fetch(authUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -18,6 +18,12 @@ app = FastAPI(title="EduMaster API")
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# Frontend static asset mounts
+os.makedirs("static/teacher/assets", exist_ok=True)
+os.makedirs("static/student/assets", exist_ok=True)
+app.mount("/teacher/assets", StaticFiles(directory="static/teacher/assets"), name="teacher-assets")
+app.mount("/student/assets", StaticFiles(directory="static/student/assets"), name="student-assets")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,8 +33,32 @@ app.add_middleware(
 )
 
 @app.get("/", include_in_schema=False)
-def root():
+def serve_root():
+    if os.path.exists("static/index.html"):
+        return FileResponse("static/index.html")
     return RedirectResponse(url="/docs")
+
+@app.get("/teacher", include_in_schema=False)
+@app.get("/teacher/{full_path:path}", include_in_schema=False)
+def serve_teacher(full_path: str = ""):
+    file_path = os.path.join("static", "teacher", full_path)
+    if full_path and os.path.isfile(file_path):
+        return FileResponse(file_path)
+    teacher_index = os.path.join("static", "teacher", "index.html")
+    if os.path.exists(teacher_index):
+        return FileResponse(teacher_index)
+    return RedirectResponse(url="/")
+
+@app.get("/student", include_in_schema=False)
+@app.get("/student/{full_path:path}", include_in_schema=False)
+def serve_student(full_path: str = ""):
+    file_path = os.path.join("static", "student", full_path)
+    if full_path and os.path.isfile(file_path):
+        return FileResponse(file_path)
+    student_index = os.path.join("static", "student", "index.html")
+    if os.path.exists(student_index):
+        return FileResponse(student_index)
+    return RedirectResponse(url="/")
 
 
 
