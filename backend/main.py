@@ -25,6 +25,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {
+        "status": "online",
+        "message": "EduMaster (PISA-QEC) API muvaffaqiyatli ishlamoqda!",
+        "docs": "https://pisa-qec.onrender.com/docs"
+    }
+
+
 def init_db(db: Session):
     settings = db.query(models.Settings).first()
     if not settings:
