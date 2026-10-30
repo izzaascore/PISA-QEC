@@ -366,32 +366,58 @@ const BlockDetails = () => {
                 let qDataList = [];
                 try {
                   const parsed = JSON.parse(topic.quiz_data);
-                  qDataList = Array.isArray(parsed) ? parsed : [{
-                    question: topic.title,
-                    isMultiSelect: parsed.isMultiSelect,
-                    options: parsed.options
-                  }];
-                } catch(e) {}
+                  qDataList = Array.isArray(parsed)
+                    ? parsed.filter(q => q && typeof q === 'object')
+                    : parsed && typeof parsed === 'object'
+                      ? [{ question: topic.title, ...parsed }]
+                      : [];
+                } catch (error) {
+                  console.error("Test ma'lumotlarini o'qishda xatolik:", error);
+                }
                 
                 return (
                   <div className="mt-3 ml-8 space-y-4">
-                    {qDataList.map((q, qIndex) => (
+                    {qDataList.map((q, qIndex) => {
+                      const options = Array.isArray(q.options)
+                        ? q.options.filter(option => option && typeof option === 'object')
+                        : [];
+                      const questionType = q.type || (q.isMultiSelect ? 'multiple_choice' : 'single_choice');
+
+                      return (
                         <div key={qIndex} className="bg-gray-50 dark:bg-gray-900/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-                          <p className="font-semibold text-gray-800 dark:text-gray-200 mb-2 text-[15px]">{qIndex + 1}. {q.question}</p>
+                          <p className="font-semibold text-gray-800 dark:text-gray-200 mb-2 text-[15px]">{qIndex + 1}. {q.question || 'Savol matni kiritilmagan'}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-3">
-                            {q.isMultiSelect ? 'Ko\'p variantli test' : 'Bir variantli test'}
+                            {questionType === 'multiple_choice'
+                              ? 'Ko‘p variantli test'
+                              : questionType === 'single_choice'
+                                ? 'Bir variantli test'
+                                : questionType === 'hotspot'
+                                  ? 'Rasmli test'
+                                  : questionType.replaceAll('_', ' ')}
                           </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {q.options.map((opt, i) => (
-                              <div key={i} className={`text-sm px-3 py-2 rounded-lg border ${opt.isCorrect ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400'}`}>
-                                <span className="font-semibold mr-2">{String.fromCharCode(65 + i)}.</span>
-                                {opt.text}
-                                {opt.isCorrect && <i className="fa-solid fa-circle-check float-right mt-0.5 opacity-75"></i>}
-                              </div>
-                            ))}
-                          </div>
+                          {options.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {options.map((opt, i) => (
+                                <div key={opt.id ?? i} className={`text-sm px-3 py-2 rounded-lg border ${opt.isCorrect ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                                  <span className="font-semibold mr-2">{String.fromCharCode(65 + i)}.</span>
+                                  {opt.text}
+                                  {opt.isCorrect && <i className="fa-solid fa-circle-check float-right mt-0.5 opacity-75"></i>}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {q.imageUrl && <img src={q.imageUrl} alt="Test rasmi" className="mb-2 max-h-48 rounded-lg object-contain" />}
+                              {questionType === 'hotspot'
+                                ? `Belgilangan sohalar: ${Array.isArray(q.hotspots) ? q.hotspots.length : 0}`
+                                : q.correct_answer
+                                  ? `To‘g‘ri javob: ${q.correct_answer}`
+                                  : 'Bu savol turida javob variantlari yo‘q.'}
+                            </div>
+                          )}
                         </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}

@@ -10,7 +10,15 @@ import Login from './pages/Login';
 import BlockDetails from './pages/BlockDetails';
 import { ThemeProvider } from './context/ThemeContext';
 
-const ProtectedRoute = ({ children, user }) => {
+const ProtectedRoute = ({ children, user, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-600 dark:bg-gray-900 dark:text-gray-300">
+        Yuklanmoqda...
+      </div>
+    );
+  }
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -19,12 +27,19 @@ const ProtectedRoute = ({ children, user }) => {
 
 function App() {
   const [user, setUser] = useState(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('teacher_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Saqlangan foydalanuvchi ma’lumotlarini o‘qib bo‘lmadi:', error);
+        localStorage.removeItem('teacher_user');
+      }
     }
+    setIsUserLoading(false);
   }, []);
 
   const handleLogin = (userData) => {
@@ -41,7 +56,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login onLogin={handleLogin} />} />
       
-      <Route path="/" element={<ProtectedRoute user={user}><MainLayout onLogout={handleLogout} /></ProtectedRoute>}>
+      <Route path="/" element={<ProtectedRoute user={user} isLoading={isUserLoading}><MainLayout onLogout={handleLogout} /></ProtectedRoute>}>
         <Route index element={<Home />} />
         <Route path="database" element={<Database />} />
         <Route path="database/blocks/:id" element={<BlockDetails />} />

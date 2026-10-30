@@ -1,6 +1,8 @@
 import re
+from pathlib import Path
 
-file_path = r'c:\Users\erkin\OneDrive\Desktop\PISA\teacher\src\pages\BlockDetails.jsx'
+project_root = Path(__file__).resolve().parents[2]
+file_path = project_root / 'frontend' / 'teacher' / 'src' / 'pages' / 'BlockDetails.jsx'
 with open(file_path, 'r', encoding='utf-8') as f:
     content = f.read()
 
